@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 import pymongo.errors
+from bson.objectid import ObjectId
 
 
 def connect_mongodb():
@@ -174,6 +175,44 @@ def get_all_students(db):
         print(f"Error al obtener estudiantes: {e}")
         return None
 
+def get_all_students_area(db, area_id):
+    print(area_id)
+    try:
+        students_collection = db.student_caipa
+        teacher_area_collection = db.teacher_area_stu
+
+        # Obtener los estudiantes inscritos en el área
+        area_data = teacher_area_collection.find_one({"area": area_id})
+        enrolled_student_ids = set()
+        if area_data and 'students' in area_data:
+            enrolled_student_ids = {student['student_id'] for student in area_data['students']}
+
+        # Obtener todos los estudiantes y proyectar solo nombre y apellido
+        all_students_cursor = students_collection.find({}, {"name_stu": 1, "lastna_stu": 1, "ced_stu": 1, "_id": 0})
+        all_students = list(all_students_cursor)
+
+        enrolled_student_names = []
+        unenrolled_student_names = []
+
+        for student in all_students:
+            student_id = student.get('ced_stu')
+            name = student.get('name_stu')
+            lastname = student.get('lastna_stu')
+
+            if student_id in enrolled_student_ids:
+                enrolled_student_names.append({"nombre": name, "apellido": lastname, "cedula": student_id})
+            else:
+                unenrolled_student_names.append({"nombre": name, "apellido": lastname, "cedula": student_id})
+
+        print("Estudiantes inscritos (nombres y apellidos):", enrolled_student_names)
+        print("Estudiantes no inscritos (nombres y apellidos):", unenrolled_student_names)
+
+        return enrolled_student_names, unenrolled_student_names
+
+    except Exception as e:
+        print(f"Error al obtener nombres de estudiantes por área: {e}")
+        return [], []
+
 def get_all_areas_simple(db):
     try:
         collection = db.areas
@@ -192,14 +231,16 @@ def get_all_areas(db):
         collection_teacher = db.teacher_caipa
 
         areas = list(collection_area.find())
-        area_teacher_map = {}
+        area_teacher_student_map = {}
 
-        # Crear un diccionario que mapea area_id a teacher_id (como cadena)
+        # Crear un diccionario que mapea area_id a teacher_id y el número de estudiantes
         for relation in collection_detect.find():
             if 'area' in relation and 'teacher' in relation:
                 area_id = str(relation['area'])
-                teacher_id = str(relation['teacher']) # Asegúrate de convertir a string aquí
-                area_teacher_map[area_id] = teacher_id
+                teacher_id = str(relation['teacher'])
+                num_students = len(relation.get('students', [])) # Usar .get() con una lista vacía por defecto
+                area_teacher_student_map.setdefault(area_id, {'teacher_id': teacher_id, 'num_students': 0})
+                area_teacher_student_map[area_id]['num_students'] = num_students
 
         # Obtener los nombres de los docentes en un diccionario para búsqueda eficiente
         teacher_name_map = {}
@@ -207,25 +248,28 @@ def get_all_areas(db):
             teacher_id_str = str(teacher['_id']) # Convertir ObjectId a string para la clave
             teacher_name_map[teacher_id_str] = teacher.get('name_tea')
 
-        # Agregar la información del docente (nombre) a cada área
-        areas_with_teacher = []
+        # Agregar la información del docente (nombre) y el número de estudiantes a cada área
+        areas_with_info = []
         for area in areas:
             area_id_str = str(area['_id'])
-            teacher_id_str = area_teacher_map.get(area_id_str) # Obtener teacher_id como string
-            teacher_name = teacher_name_map.get(teacher_id_str) # Buscar usando la cadena
+            teacher_info = area_teacher_student_map.get(area_id_str)
+            teacher_id_str = teacher_info.get('teacher_id') if teacher_info else None
+            teacher_name = teacher_name_map.get(teacher_id_str)
+            num_students = str(teacher_info.get('num_students')) if teacher_info else "0"
 
             area_info = {
                 "_id": area['_id'],
                 "name_area": area['name_area'],
                 "teacher_assigned_id": teacher_id_str,
-                "teacher_assigned_name": teacher_name
+                "teacher_assigned_name": teacher_name,
+                "num_registered_students": num_students
             }
-            areas_with_teacher.append(area_info)
+            areas_with_info.append(area_info)
 
-        print(areas_with_teacher)
-        return areas_with_teacher
+        print(areas_with_info)
+        return areas_with_info
     except Exception as e:
-        print(f"Error al obtener áreas con información de docentes: {e}")
+        print(f"Error al obtener áreas con información de docentes y estudiantes: {e}")
         return None
 
 
@@ -411,4 +455,29 @@ def assign_teacher_to_area_db(db, teacher_id, area_id):
             "teacher": teacher_id
         }
         teacher_area.insert_one(new_assignment)
-        return "Docente asignado correctamente."        
+        return "Docente asignado correctamente."
+
+
+def assign_student_to_area_db(db, student_id, area_id):
+    teacher_area = db.teacher_area_stu
+
+    # Verificar si el estudiante ya está asignado a esta área
+    existing_assignment = teacher_area.find_one(
+        {"area": area_id, "students.student_id": student_id}
+    )
+
+    if existing_assignment:
+        return "El estudiante ya está asignado a esta área."
+    else:
+        # Agregar el estudiante al array 'students' del documento del área
+        result = teacher_area.update_one(
+            {"area": area_id},
+            {"$push": {"students": {"student_id": student_id, "student_report": ""}}}
+            # Puedes inicializar 'student_report' con un valor por defecto si lo deseas
+        )
+        if result.modified_count > 0:
+            return "Estudiante asignado correctamente."
+        else:
+            return "No se encontró el área especificada."
+
+
