@@ -10,6 +10,103 @@ ScreenManager:
     StudentsScreen:
     AreasScreen:
     TeacherScreen:
+    StudentsScreenArea:
+
+<StudentsScreenArea>:
+    name: 'students_screen_area'
+
+    MDBoxLayout:
+        orientation: 'vertical'
+
+        MDBoxLayout:
+            size_hint_y: None
+            height: "80dp"
+            md_bg_color: app.theme_cls.primary_color
+            padding: "0dp"
+
+            MDIconButton:
+                icon: "arrow-left"
+                theme_icon_color: "Custom"
+                icon_color: 1, 1, 1, 1
+                pos_hint: {"center_y": 0.5}
+                on_release: app.root.current = 'areas_screen' # Reemplaza con la pantalla anterior
+                halign: "left"
+
+            MDLabel:
+                text: "CAIPA"
+                theme_text_color: "Custom"
+                text_color: 1, 1, 1, 1
+                halign: "center"
+                valign: "center"
+                size_hint_x: 1
+                font_style: "H3"
+
+            MDIconButton:
+                icon: "dots-vertical" # O el icono que prefieras
+                theme_icon_color: "Custom"
+                icon_color: 1, 1, 1, 1
+                pos_hint: {"center_y": 0.5}
+                # Puedes agregar funcionalidad aquí
+                halign: "right"
+
+        MDScrollView:
+            MDBoxLayout:  # Contenedor del contenido desplazable
+                orientation: 'vertical'
+                padding: '10dp'
+                spacing: '10dp'
+                size_hint_y: None  # Importante para que el ScrollView controle la altura
+                height: self.minimum_height  # Ajusta la altura al contenido
+
+                MDLabel:
+                    text: "Estudiantes Inscritos"
+                    font_style: "H6"
+
+                MDBoxLayout:  # Lista de estudiantes inscritos
+                    id: enrolled_student_list_box
+                    orientation: 'vertical'
+                    spacing: '5dp'
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                MDLabel:
+                    text: "Estudiantes No Inscritos"
+                    font_style: "H6"
+                    
+
+                MDBoxLayout:  # Lista de estudiantes no inscritos
+                    id: unenrolled_student_list_box
+                    orientation: 'vertical'
+                    spacing: '5dp'
+                    size_hint_y: None
+                    height: self.minimum_height
+<StudentCardArea>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: "150dp" # Ajusta la altura según necesites
+    padding: 10
+    spacing: 5
+
+    MDLabel:
+        text: f"Nombre: {root.name}"
+        font_size: '16sp'
+
+    MDLabel:
+        text: f"Apellido: {root.lastname}"
+        font_size: '16sp'
+
+    MDLabel:
+        text: f"Cédula: {root.ced}"
+        font_size: '14sp'
+
+    MDGridLayout:
+        cols: 2
+        spacing: 15
+
+        MDIconButton:
+            icon: "clipboard-account"
+            icon_color: "blue"
+            on_release: app.assign_student_to_area(root.student_id)
+
 
 <StudentsScreen>:
     name: 'students_screen'
@@ -148,168 +245,108 @@ ScreenManager:
                         id: name_stu
                         icon_left: "account-circle"
                         hint_text: "Nombre"
-                        hint_text_font_size: 5 
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"                        
                         
                         
                     MDTextField:
                         id: lastname_stu
                         icon_left: "account-circle"
                         hint_text: "Apellidos"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
+        
                         
 
                     MDTextField:
                         id: document_id_stu
                         icon_left: "card-account-details"
                         hint_text: "Cedula de Identidad"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
+
                         
                         
                     MDTextField:
                         id: age_stu
                         icon_left: "page-layout-body"
                         hint_text: "Edad"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
+
                         
                         
                     MDTextField:
                         id: grp_sng_stu
                         icon_left: "page-layout-body"
                         hint_text: "Grupo Sanguineo"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
+
                         
                     MDTextField:
                         id: direcc_stu
                         icon_left: "page-layout-body"
                         hint_text: "Direccion"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
+
 
                     MDTextField:
                         id: fech_nac
                         icon_left: "page-layout-body"
                         hint_text: "Fecha de Nacimiento"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}    
+                        mode: "rectangle" 
+
 
                     MDTextField:
                         id: cami_stu
                         icon_left: "page-layout-body"
                         hint_text: "Talla de Camisa"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
 
                     MDTextField:
                         id: pan_stu
                         icon_left: "page-layout-body"
                         hint_text: "Talla de Pantalon"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
 
                     MDTextField:
                         id: zapa_stu
                         icon_left: "page-layout-body"
                         hint_text: "Talla de Zapato"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
 
                     MDTextField:
                         id: birth_stu
                         icon_left: "account-circle"
                         hint_text: "Ciudad de Nacimiento"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5} 
+                        mode: "rectangle"
 
                     MDTextField:
                         id: state_stu
                         icon_left: "account-circle"
                         hint_text: "Estado de Nacimiento"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}  
+                        mode: "rectangle"
 
 
                     MDTextField:
                         id: natio_stu
                         icon_left: "account-circle"
                         hint_text: "Nacionalidad"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}  
+                        mode: "rectangle"
 
                     MDTextField:
                         id: country_stu
                         icon_left: "account-circle"
                         hint_text: "Estado de Residencia"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5} 
+                        mode: "rectangle"
 
                     MDTextField:
                         id: gender
                         icon_left: "account-circle"
                         hint_text: "Genero"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5} 
+                        mode: "rectangle"
 
                     MDTextField:
                         id: pes_stu
                         icon_left: "account-circle"
                         hint_text: "Peso"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
-
+                        mode: "rectangle"
 
                     MDLabel:
                         text: "Representante"
@@ -323,95 +360,58 @@ ScreenManager:
                         id: name_repre
                         icon_left: "account-circle"
                         hint_text: "Nombre"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
                            
                     MDTextField:
                         id: lastname_repre
                         icon_left: "account-circle"
                         hint_text: "Apellidos"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
                         
 
                     MDTextField:
                         id: document_id_repre
                         icon_left: "card-account-details"
                         hint_text: "Cedula de Identidad"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
                     
                         
                     MDTextField:
                         id: age_repre
                         icon_left: "page-layout-body"
                         hint_text: "Edad"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
 
                     MDTextField:
                         id: number_repre
                         icon_left: "page-layout-body"
-                        hint_text: "N Casero"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
 
 
                     MDTextField:
                         id: phone_repre
                         icon_left: "page-layout-body"
                         hint_text: "N Movil"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
 
 
                     MDTextField:
                         id: email_repre
                         icon_left: "page-layout-body"
                         hint_text: "Email"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
 
                     MDTextField:
                         id: direcc_repre
                         icon_left: "page-layout-body"
                         hint_text: "Direccion"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
+                        mode: "rectangle"
 
                     MDTextField:
                         id: password
                         icon_left: "password"
                         hint_text: "Clave"
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 100
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}                    
+                        mode: "rectangle"                 
                                             
                     MDRaisedButton:
                         text: "Guardar"
@@ -450,10 +450,9 @@ ScreenManager:
                     orientation: 'vertical'
                     spacing: 15
                     padding: [0, 0, 0, 0] 
-                        
 
                 MDGridLayout:
-                    cols: 2  
+                    cols: 1
                     size_hint_y: None
                     padding: 20
                     spacing: 10                    
@@ -463,21 +462,21 @@ ScreenManager:
                         id: name_area
                         icon_left: "account-circle"
                         hint_text: "Nombre"
-                        hint_text_font_size: 5 
-                        foreground_color: 1, 0, 1, 1
-                        size_hint_x: None
-                        width: 150
-                        font_size: 15
-                        pos_hint: {"center_x": 0.5}
-                        
-                                 
-                    MDRaisedButton:
-                        text: "Guardar"
-                        on_release: app.create_area_caipa()
+                        mode: "rectangle"
+                    MDGridLayout:
+                        cols: 2 
+                        padding: 20
+                        spacing: 10                    
+                        height: self.minimum_height 
 
-                    MDRaisedButton:
-                        text: "Volver"
-                        on_release: app.root.current = 'main' 
+                        MDRaisedButton:
+                            text: "Guardar"
+                            on_release: app.create_area_caipa()
+
+                        MDRaisedButton:
+                            text: "Volver"
+                            md_bg_color: 1, 0, 0, 1 
+                            on_release: app.root.current = 'main' 
 
 <AreasScreen>:
     name: 'areas_screen'
@@ -541,7 +540,11 @@ ScreenManager:
 
     MDLabel:
         text: f"Docente: {root.name_tea}"
-        font_size: '15sp'        
+        font_size: '15sp'   
+
+    MDLabel:
+        text: f"Estudiantes: {root.number_stu}"
+        font_size: '15sp'           
 
     MDGridLayout:
         cols: 4
@@ -550,15 +553,15 @@ ScreenManager:
         MDIconButton:
             icon: "pen-plus"
             icon_color: "blue"
-            on_release: app.selected_student_id = root.student_id; app.root.current = 'update_student_screen'
+            on_release: app.selected_student_id = root.student_id; app.root.current = 'update_areas_screen'
         MDIconButton:
             icon: "trash-can-outline"
             icon_color: "red"
-            on_release: app.show_delete_confirmation(root.student_id)
+            on_release: app.show_delete_confirmation(root.area_id)
         MDIconButton:
             icon: "school"
             icon_color: "red"
-            on_release: app.show_delete_confirmation(root.student_id)
+            on_release: app.load_students_area(root.area_id)
         MDIconButton:
             icon: "human-male-board"
             icon_color: "red"
@@ -648,50 +651,99 @@ ScreenManager:
 
 <LoginScreen>:
     name: 'login'
-    MDScrollView:  # Agregar MDScrollView para hacer el contenido desplazable
-        MDCard:
-            size_hint: None, None
-            size: 350, 600
-            pos_hint: {"center_x": 0.5, "center_y": 0.5}
-            elevation: 10
-            padding: 65
-            spacing: 35
-            orientation: 'vertical'
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Rectangle:
+                size: self.size
+                pos: self.pos
 
-            Image:
-                source: 'img/logo.jpg'  
-                height: 220  
-                allow_stretch: False  
-                keep_ratio: True  
-                halign: 'center' 
+        FloatLayout:
+            MDCard:
+                size_hint: None, None
+                size: 380, 600
+                pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                elevation: 8
+                padding: "40dp"
+                spacing: "30dp"
+                orientation: 'vertical'
 
-            MDTextField:
-                id: user
-                icon_left: "account-check"
-                hint_text: "Username"
-                foreground_color: 1, 0, 1, 1
-                size_hint_x: None
-                width: 220
-                font_size: 20
-                pos_hint: {"center_x": 0.5}
+                canvas.before:
+                    Color:
+                        rgba: self.theme_cls.primary_color
+                    RoundedRectangle:
+                        size: self.size
+                        pos: self.pos
+                        radius: [15]
 
-            MDTextField:
-                id: password
-                icon_left: "key-variant"
-                hint_text: "Password"
-                foreground_color: 1, 0, 1, 1
-                size_hint_x: None
-                width: 220
-                font_size: 20
-                pos_hint: {"center_x": 0.5}
-                password: True
-            
-            MDFillRoundFlatButton:
-                text: 'Inicia Sesion'
-                font_size: 15
-                pos_hint: {"center_x": 0.5}
-                on_press: app.login()
+                Image:
+                    source: 'img/logo.jpg'
+                    height: 150
+                    allow_stretch: False
+                    keep_ratio: True
+                    halign: 'center'
+                    pos_hint: {"center_x": 0.5}
+                    y: self.parent.height - self.height - dp(50)
 
+                MDLabel:
+                    text: "Iniciar Sesión"
+                    font_style: 'H4'
+                    halign: 'center'
+                    theme_text_color: 'Primary'
+                    pos_hint: {"center_x": 0.5}
+
+
+                MDTextField:
+                    id: user
+                    hint_text: "Correo Electrónico"
+                    line_color_normal: self.theme_cls.divider_color
+                    line_color_focus: self.theme_cls.primary_color
+                    foreground_color: self.theme_cls.text_color
+                    hint_text_color: self.theme_cls.disabled_hint_text_color
+                    icon_left: "email-outline"
+                    icon_left_color: self.theme_cls.primary_color
+                    size_hint_x: None
+                    width: 280
+                    font_size: 16
+                    pos_hint: {"center_x": 0.5}
+                    mode: "rectangle"
+
+                MDTextField:
+                    id: password
+                    hint_text: "Contraseña"
+                    line_color_normal: self.theme_cls.divider_color
+                    line_color_focus: self.theme_cls.primary_color
+                    foreground_color: self.theme_cls.text_color
+                    hint_text_color: self.theme_cls.disabled_hint_text_color
+                    icon_left: "lock-outline"
+                    icon_left_color: self.theme_cls.primary_color
+                    size_hint_x: None
+                    width: 280
+                    font_size: 16
+                    pos_hint: {"center_x": 0.5}
+                    password: True
+                    mode: "rectangle"
+
+                MDRoundFlatButton:
+                    text: 'Iniciar Sesión'
+                    font_size: 16
+                    pos_hint: {"center_x": 0.5}
+                    text_color: (1, 1, 1, 1)
+                    md_bg_color: self.theme_cls.primary_color
+                    on_press: app.login()
+                    elevation: 6
+                    theme_text_color: 'Custom'
+
+                MDTextButton:
+                    text: "¿Olvidaste tu contraseña?"
+                    pos_hint: {"center_x": 0.5}
+                    theme_text_color: 'Secondary'
+                    text_color: self.theme_cls.primary_color
+
+                MDTextButton:
+                    text: "Crear una cuenta"
+                    pos_hint: {"center_x": 0.5}
+                    theme_text_color: 'Primary'
 <MainScreen>:
     name: 'main'
     MDBoxLayout:
@@ -700,8 +752,16 @@ ScreenManager:
         MDBoxLayout:
             size_hint_y: None
             height: "80dp"  # Altura estándar de un toolbar
-            md_bg_color: app.theme_cls.primary_color 
+            md_bg_color: app.theme_cls.primary_color
             padding: "0dp"  # Añade padding para el texto
+
+            MDIconButton:  # Botón a la derecha (Salir)
+                icon: "logout"  # Icono de salir
+                theme_icon_color: "Custom"
+                icon_color: 1, 1, 1, 1
+                pos_hint: {"center_y": 0.5}
+                on_press: app.logout()
+                halign: "right" # Opcional: alinear el icono dentro del botón            
 
             MDLabel:
                 text: "CAIPA"
@@ -710,14 +770,16 @@ ScreenManager:
                 halign: "center"
                 valign: "center"
                 size_hint_x: 1
-                font_style: "H3"  # Opcional: Ajusta el estilo de fuente
-                
+                font_style: "H2" 
+
             MDIconButton:  # Botón del menú
                 icon: "dots-vertical"
                 theme_icon_color: "Custom"
                 icon_color: 1, 1, 1, 1
                 pos_hint: {"center_y": 0.5}
                 on_release: app.open_menu(self) 
+
+                
 
         MDScrollView:
             BoxLayout:
