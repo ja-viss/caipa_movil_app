@@ -8,6 +8,7 @@ from kivy.core.window import Window
 from kivymd.uix.textfield import MDTextField
 from kivymd.uix.card import MDCard
 from kivymd.uix.label import MDLabel
+from kivy.uix.label import Label
 from kivymd.uix.button import MDRaisedButton, MDRoundFlatButton
 from kivy.properties import StringProperty
 from kivymd.uix.menu import MDDropdownMenu
@@ -17,8 +18,7 @@ from kivymd.uix.scrollview import MDScrollView
 from kivymd.uix.bottomnavigation import MDBottomNavigation, MDBottomNavigationItem 
 from kivy.utils import get_color_from_hex
 from kivy.properties import ObjectProperty  
-from model import connect_mongodb, get_user_data, get_user_type, get_role_info, update_representative_student_data, update_other_data, get_all_students, update_student, delete_student, get_student_data, create_student, create_area, get_all_areas, get_all_teacher, assign_teacher_to_area_db
-
+from model import connect_mongodb, get_user_data, get_user_type, get_role_info, update_representative_student_data, update_other_data, get_all_students_area, get_all_students, update_student, delete_student, get_student_data, create_student, create_area, get_all_areas, get_all_teacher, assign_teacher_to_area_db, assign_student_to_area_db
 Window.size = (350, 600)
 
 class TeacherScreen(Screen):
@@ -29,6 +29,16 @@ class TeacherCard(MDCard):
     lastname = StringProperty()
     ced = StringProperty()
     teacher_id = StringProperty()
+
+class StudentsScreenArea(Screen):
+    pass
+
+class StudentCardArea(MDCard):
+    name = StringProperty()
+    lastname = StringProperty()
+    ced = StringProperty()
+    age = StringProperty()
+    student_id = StringProperty()    
 
 class StudentsScreen(Screen):
     pass
@@ -47,6 +57,7 @@ class AreasCard(MDCard):
     name = StringProperty()
     area_id = StringProperty()
     name_tea = StringProperty()
+    number_stu = StringProperty()    
 
 
 
@@ -112,7 +123,6 @@ class UpdateStudentScreen(Screen):
 
 class DeleteStudentScreen(Screen):
     pass
-
 
 
 class CaipaApp(MDApp):
@@ -183,6 +193,64 @@ class CaipaApp(MDApp):
             print(f"Opción seleccionada: {text}")
         self.menu.dismiss()
 
+    def load_students_area(self, area_id=None):  # Ahora acepta un area_id
+        if self.user_type == 'Administrativo':
+            print("Funcion Correcta")
+            students_screen = self.root.get_screen('students_screen_area')
+            enrolled_list_box = students_screen.ids.enrolled_student_list_box  # Asegúrate de tener estos IDs en tu .kv
+            unenrolled_list_box = students_screen.ids.unenrolled_student_list_box  # Asegúrate de tener estos IDs en tu .kv
+            enrolled_list_box.clear_widgets()
+            unenrolled_list_box.clear_widgets()
+
+            self.selected_area_id = area_id
+
+            if area_id:
+                db = connect_mongodb()
+                if db is not None:
+                    try:
+                        enrolled_students, unenrolled_students = get_all_students_area(db, area_id) # Llama a la función que devuelve dos listas
+
+
+                        if enrolled_students is not None and unenrolled_students is not None:
+                            if enrolled_students:
+                                for student in enrolled_students:
+                                    student_card = StudentCardArea(
+                                        name=student['nombre'],
+                                        lastname=student['apellido'],
+                                        ced=student.get('cedula', 'N/A'), # Asegúrate de que la clave exista
+                                        age='N/A', # No tienes la edad en esta función
+                                        student_id=student.get('cedula', 'N/A') # Usa la cédula como ID
+                                    )
+                                    enrolled_list_box.add_widget(student_card)
+                            else:
+                                enrolled_list_box.add_widget(MDLabel(text="No hay estudiantes inscritos en esta área."))
+
+                            if unenrolled_students:
+                                unenrolled_list_box.add_widget(Label(text="Estudiantes No Inscritos:", bold=True))
+                                for student in unenrolled_students:
+                                    student_card_2 = StudentCardArea(
+                                        name=student['nombre'],
+                                        lastname=student['apellido'],
+                                        ced=student.get('cedula', 'N/A'),
+                                        age='N/A',
+                                        student_id=student.get('cedula', 'N/A')
+                                    )
+                                    unenrolled_list_box.add_widget(student_card_2)
+                            else:
+                                unenrolled_list_box.add_widget(MDLabel(text="Todos los estudiantes están inscritos en esta área."))
+
+                            self.root.current = 'students_screen_area' # Asegúrate de que esta sea la pantalla correcta
+                        else:
+                            self.show_error_dialog("Error al obtener la lista de estudiantes por área.")
+
+                    except Exception as e:
+                        self.show_error_dialog(f"Error al cargar estudiantes por área: {str(e)}")
+                else:
+                    self.show_error_dialog("Error al conectar a la base de datos.")
+            else:
+                self.show_error_dialog("Por favor, selecciona un área para cargar los estudiantes.")
+
+
     def load_students_admin(self):
         if self.user_type == 'Administrativo':
             students_screen = self.root.get_screen('students_screen')
@@ -190,7 +258,7 @@ class CaipaApp(MDApp):
             student_list_box.clear_widgets()
 
             db = connect_mongodb()
-            if db:
+            if db is not None: 
                 try:
                     students = get_all_students(db)
                     print(f"Estudiantes obtenidos: {students}")  # Depuración
@@ -219,21 +287,25 @@ class CaipaApp(MDApp):
             areas_list_box = areas_screen.ids.areas_list_box
             areas_list_box.clear_widgets()
             db = connect_mongodb()
-            if db:
+            if db is not None: 
                 try:
                     areas = get_all_areas(db)
                     print(f"areas obtenidos: {areas}")  # Depuración
                     if areas:
                         for area in areas:
                             teacher_name = area.get('teacher_assigned_name')
-                            if teacher_name:
+                            number_student = area.get('num_registered_students')
+                            if teacher_name and number_student:
                                 name_tea = teacher_name
+                                number_stu = number_student
                                 print(name_tea)
                             else:
                                 name_tea = 'Aun no posee Docente Asignado'
+                                number_stu = 'Aun no posee Estudiantes Asignados'
                             areas_card = AreasCard(
                                 name=area['name_area'],
                                 name_tea=name_tea,
+                                number_stu=number_stu,
                                 area_id=str(area['_id'])
                             )
                             areas_list_box.add_widget(areas_card)
@@ -254,7 +326,7 @@ class CaipaApp(MDApp):
             self.selected_area_id = area_id  # Almacena el area_id en la instancia de la aplicación
 
             db = connect_mongodb()
-            if db:
+            if db is not None: 
                 try:
                     teachers = get_all_teacher(db)
                     print(f"Docentes obtenidos: {teachers}")  # Depuración
@@ -295,6 +367,29 @@ class CaipaApp(MDApp):
         else: # Si connect_mongodb falla
             self.show_error_dialog('Error al conectar a la base de datos')
 
+    def assign_student_to_area(self, student_id):
+        if self.selected_area_id:
+            # Aquí debes implementar la lógica para asignar el teacher_id al area_id en tu base de datos.
+            # Por ejemplo, puedes llamar a una función en tu modelo que realice la actualización.
+            print(f"Asignando estudiante {student_id} al área {self.selected_area_id}")
+            # Lógica para actualizar la base de datos (usando tu modelo)
+            db = connect_mongodb()
+            if db is not None: 
+                try:
+                    #Asumiendo que tienes una funcion en model.py o donde este tu logica de base de datos
+                    #llamada assign_teacher_to_area_db(db, teacher_id, area_id)
+                    message = assign_student_to_area_db(db, student_id, self.selected_area_id)
+                    self.show_error_dialog(message)
+                    self.root.current = 'areas_screen'
+                except Exception as e:
+                    self.show_error_dialog(f"Error al asignar docente: {str(e)}")
+            else:
+                self.show_error_dialog("Error al conectar a la base de datos.")
+
+        else:
+            self.show_error_dialog("No se ha seleccionado un área.")    
+
+
     def assign_teacher_to_area(self, teacher_id):
         if self.selected_area_id:
             # Aquí debes implementar la lógica para asignar el teacher_id al area_id en tu base de datos.
@@ -302,7 +397,7 @@ class CaipaApp(MDApp):
             print(f"Asignando docente {teacher_id} al área {self.selected_area_id}")
             # Lógica para actualizar la base de datos (usando tu modelo)
             db = connect_mongodb()
-            if db:
+            if db is not None: 
                 try:
                     #Asumiendo que tienes una funcion en model.py o donde este tu logica de base de datos
                     #llamada assign_teacher_to_area_db(db, teacher_id, area_id)
@@ -389,7 +484,7 @@ class CaipaApp(MDApp):
 
         # Llamar a la función en model.py para actualizar los datos
         db = connect_mongodb()
-        if db:
+        if db is not None: 
             if self.user_type == 'Representante':
                 success, message = update_representative_student_data(
                     db, self.user_identify, self.user_type,
@@ -430,7 +525,7 @@ class CaipaApp(MDApp):
         age_repre = self.root.get_screen('update_student_screen').ids.age_repre.text
         # Llamar a la función de actualización en model.py
         db = connect_mongodb()
-        if db:
+        if db is not None: 
             success, message = update_student(db, student_id, name_stu, lastna_stu, age_stu, grp_sng_stu, id_repre, name_repre, lastna_repre, age_repre)
             if success:
                 self.show_error_dialog(message)
@@ -470,7 +565,7 @@ class CaipaApp(MDApp):
         password = self.root.get_screen('registrar_estudiante').ids.password.text
         # Llamar a la función de creación en model.py
         db = connect_mongodb()
-        if db:
+        if db is not None: 
             success, message = create_student(db, ced_stu, name_stu, lastna_stu, age_stu, grp_sng_stu, direcc_stu, fech_nac, cami_stu, pan_stu, zapa_stu, birth_stu, natio_stu, country_stu, gender, pes_stu, ced_repre, name_repre, lastna_repre, age_repre, phone_repre, number_repre, email_repre, direcc_repre, password)
             if success:
                 self.show_error_dialog(message)
@@ -514,7 +609,7 @@ class CaipaApp(MDApp):
         name_area = self.root.get_screen('registrar_area').ids.name_area.text
 
         db = connect_mongodb()
-        if db:
+        if db is not None: 
             success, message = create_area(db, name_area)
             if success:
                 self.show_error_dialog(message)
@@ -554,7 +649,7 @@ class CaipaApp(MDApp):
         print(self.selected_student_id)
         # Llamar a la función de eliminación en model.py
         db = connect_mongodb()
-        if db:
+        if db is not None: 
             confirm_dialog.dismiss()
             success, message = delete_student(db, student_id)
             if success:
@@ -597,83 +692,57 @@ BoxLayout:
             halign: 'center'
             valign: 'center'
 
-    MDGridLayout:
-        cols: 2  
-        spacing: 15
-        
-        MDTextField:
-            id: name
-            icon_left: "account-circle"
-            hint_text: "Nombre"
-            foreground_color: 1, 0, 1, 1
-            size_hint_x: None
-            width: 150
-            font_size: 15
-            pos_hint: {"center_x": 0.5}
-            readonly: True
-        
-        MDTextField:
-            id: lastname
-            icon_left: "account-circle"
-            hint_text: "Apellidos"
-            foreground_color: 1, 0, 1, 1
-            size_hint_x: None
-            width: 150
-            font_size: 15
-            pos_hint: {"center_x": 0.5}
-            readonly: True
+    MDBoxLayout:
+        orientation: 'vertical'
+        size_hint_y: None
+        height: self.minimum_height  # Importante: Ajustar la altura dinámicamente            
 
-        MDTextField:
-            id: document_id
-            icon_left: "card-account-details"
-            hint_text: "Cedula de Identidad"
-            foreground_color: 1, 0, 1, 1
-            size_hint_x: None
-            width: 150
-            font_size: 15
-            pos_hint: {"center_x": 0.5}
-            readonly: True
-            
-            
-        MDTextField:
-            id: age
-            icon_left: "page-layout-body"
-            hint_text: "Edad"
-            foreground_color: 1, 0, 1, 1
-            size_hint_x: None
-            width: 150
-            font_size: 15
-            pos_hint: {"center_x": 0.5}
-            readonly: True
+        MDGridLayout:
+            cols: 2
+            spacing: 15
+                
+            MDTextField:
+                id: name
+                icon_left: "account-circle-outline"
+                hint_text: "Nombre"
+                readonly: True
+                mode: "rectangle"
 
-        MDTextField:
-            id: phone
-            icon_left: "phone"
-            hint_text: "Numero de Telefono"
-            foreground_color: 1, 0, 1, 1
-            size_hint_x: None
-            width: 150
-            font_size: 15
-            pos_hint: {"center_x": 0.5}
-            readonly: True
-            
-        MDTextField:
-            id: email
-            icon_left: "email-box"
-            hint_text: "Correo Electronico"
-            foreground_color: 1, 0, 1, 1
-            size_hint_x: None
-            width: 150
-            font_size: 15
-            pos_hint: {"center_x": 0.5}
-            readonly: True
+            MDTextField:
+                id: lastname
+                icon_left: "account-circle-outline"
+                hint_text: "Apellidos"
+                readonly: True
+                mode: "rectangle"
 
-        MDRaisedButton:
-            text: "Cerrar sesion"
-            size_hint_x: None
-            width: 150
-            pos_hint: {"center_x": 0.5}
-            on_press: app.logout()
+            MDTextField:
+                id: document_id
+                icon_left: "badge-account-horizontal-outline"
+                hint_text: "Cédula de Identidad"
+                readonly: True
+                mode: "rectangle"
+
+            MDTextField:
+                id: age
+                icon_left: "calendar-outline"
+                hint_text: "Edad"
+                readonly: True
+                mode: "rectangle"
+
+            MDTextField:
+                id: phone
+                icon_left: "phone-outline"
+                hint_text: "Número de Teléfono"
+                readonly: True
+                mode: "rectangle"
+
+            MDTextField:
+                id: email
+                icon_left: "email-outline"
+                hint_text: "Correo Electrónico"
+                readonly: True
+                mode: "rectangle"
+
 
 ''')
             
